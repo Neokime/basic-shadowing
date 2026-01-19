@@ -1,25 +1,23 @@
+// hooks/useRecordSegment.ts
 import { useState, useRef } from "react";
 
-//상태분리
 type RecordState = "READY" | "RECORDING" | "DONE";
 
 export function useRecordSegment() {
-  const [recordState, setRecordState] = useState<RecordState>("READY"); //상태설정
+  const [recordState, setRecordState] = useState<RecordState>("READY");
 
-  const startTimeRef = useRef<number | null>(null);  //녹음 시작 박스
-  const endTimeRef = useRef<number | null>(null);    // 녹음 끝나는 박스
+  const startTimeRef = useRef<number | null>(null);
+  const endTimeRef = useRef<number | null>(null);
 
-  function start(currentTime: number) {           // 녹음 시작 메서드
-    if (recordState !== "READY") return;          // 상태전이 함수에서는 return없음
-
+  function start(currentTime: number) {
+    if (recordState !== "READY") return;
     startTimeRef.current = currentTime;
     endTimeRef.current = null;
-    setRecordState("RECORDING");     
+    setRecordState("RECORDING");
   }
 
-  function stop(currentTime: number) {                  //녹음 하는중
-    if (recordState !== "RECORDING") return;       
- 
+  function stop(currentTime: number) {
+    if (recordState !== "RECORDING") return;
     endTimeRef.current = currentTime;
     setRecordState("DONE");
   }
