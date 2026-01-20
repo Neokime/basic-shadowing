@@ -4,6 +4,7 @@ import { useKeyboardControl } from "../hooks/useKeyboardControl";
 import { useRecordSegment } from "../hooks/useRecordSegment";
 import { subtitles } from "../hooks/subtitles";
 import { mockEvaluate } from "../engine/mockEvaluate";
+import { useSpeech } from "../speech/useSpeech";
 
 /* ---------- 타입 ---------- */
 
@@ -21,6 +22,9 @@ type EvalResult = {
   weakSegments: { start: number; end: number }[];
 };
 
+type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
+
+
 /* ---------- 컴포넌트 ---------- */
 
 export default function VideoPlayer() {
@@ -28,16 +32,16 @@ export default function VideoPlayer() {
 
   /* ---------- 상태 ---------- */
 
+  const [mode, setMode] = useState<PracticeMode>("SHADOWING");
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
 
-  // A/B = 루프 기준
   const [A, setAVal] = useState<number | null>(null);
   const [B, setBVal] = useState<number | null>(null);
 
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
 
-  /* ---------- 비디오 제어 ---------- */
+  /* ---------- 비디오 ---------- */
 
   const {
     play,
@@ -50,7 +54,7 @@ export default function VideoPlayer() {
     getTime,
   } = useVideoControl(videoRef);
 
-  /* ---------- 녹음 제어 (시간 기반) ---------- */
+  /* ---------- 녹음(시간 기준) ---------- */
 
   const {
     recordState,
@@ -61,6 +65,26 @@ export default function VideoPlayer() {
     endTimeRef,
   } = useRecordSegment();
 
+  /* ---------- Speech (DICTATION 전용) ---------- */
+
+  const speech = useSpeech("en-US");
+
+  useEffect(() => {
+    if (mode !== "DICTATION") return;
+
+    if (recordState === "RECORDING") {
+      speech.start();
+    }
+
+    if (recordState === "DONE") {
+      speech.stop();
+      console.log("[DICTATION]", {
+        spoken: speech.hasSpoken,
+        transcript: speech.transcript,
+      });
+    }
+  }, [recordState, mode]);
+
   /* ---------- 공통 동작 ---------- */
 
   const applyLoop = () => {
@@ -69,33 +93,16 @@ export default function VideoPlayer() {
     startLoop(true);
   };
 
-  const beginRecord = () => {
-    startRecord(getTime());
-  };
-
-  const finishRecord = () => {
-    stopRecord(getTime());
-  };
+  const beginRecord = () => startRecord(getTime());
+  const finishRecord = () => stopRecord(getTime());
 
   /* ---------- 키보드 ---------- */
 
   useKeyboardControl({
-    setA: () => {
-      const t = getTime();
-      setAVal(t);
-      console.log("[A SET]", t);
-    },
-    setB: () => {
-      const t = getTime();
-      setBVal(t);
-      console.log("[B SET]", t);
-    },
-    toggleLoop: () => {
-      applyLoop();
-    },
-    stop: () => {
-      stopLoop();
-    },
+    setA: () => setAVal(getTime()),
+    setB: () => setBVal(getTime()),
+    toggleLoop: applyLoop,
+    stop: stopLoop,
   });
 
   /* ---------- A/B 변경 시 루프 갱신 ---------- */
@@ -106,15 +113,15 @@ export default function VideoPlayer() {
     }
   }, [A, B, setLoopRange]);
 
-  /* ---------- 녹음 완료 → 평가(mock) ---------- */
+  /* ---------- SHADOWING 평가 ---------- */
 
   useEffect(() => {
+    if (mode !== "SHADOWING") return;
     if (recordState !== "DONE") return;
 
     const st = startTimeRef.current;
     const et = endTimeRef.current;
 
-    // 방어
     if (st == null || et == null || et <= st) {
       console.log("[EVAL SKIP] invalid segment", { st, et });
       return;
@@ -127,27 +134,29 @@ export default function VideoPlayer() {
       playbackRate,
     };
 
-    const result: EvalResult = mockEvaluate(segment);
+    const result = mockEvaluate(segment);
     setEvalResult(result);
-
     console.log("[EVAL RESULT]", result);
-  }, [recordState, playbackRate, startTimeRef, endTimeRef]);
+  }, [recordState, mode, playbackRate]);
 
   /* ---------- 자막 ---------- */
 
-  function getActiveSubtitle(time: number) {
-    return subtitles.find(
-      (s) => time >= s.start && time <= s.end
-    );
-  }
-
-  const activeSubtitle = getActiveSubtitle(currentTime);
+  const activeSubtitle = subtitles.find(
+    (s) => currentTime >= s.start && currentTime <= s.end
+  );
 
   /* ---------- UI ---------- */
 
   return (
     <div style={{ width: 640 }}>
-      {/* 비디오 + 자막 */}
+      {/* 모드 */}
+      <div style={{ marginBottom: 8 }}>
+        <button onClick={() => setMode("LISTEN")}>Listen</button>
+        <button onClick={() => setMode("SHADOWING")}>Shadowing</button>
+        <button onClick={() => setMode("DICTATION")}>Dictation</button>
+      </div>
+
+      {/* 비디오 */}
       <div style={{ position: "relative", width: 640 }}>
         <video
           ref={videoRef}
@@ -157,7 +166,6 @@ export default function VideoPlayer() {
           onTimeUpdate={() => setCurrentTime(getTime())}
         />
 
-        {/* 자막 오버레이 */}
         {showSubtitle && activeSubtitle && (
           <div
             style={{
@@ -165,15 +173,9 @@ export default function VideoPlayer() {
               bottom: 64,
               left: "50%",
               transform: "translateX(-50%)",
-              maxWidth: "90%",
-              textAlign: "center",
               color: "white",
               fontSize: 22,
-              fontWeight: 500,
-              lineHeight: 1.4,
               textShadow: "0 2px 8px rgba(0,0,0,0.9)",
-              pointerEvents: "none",
-              padding: "6px 10px",
             }}
           >
             {activeSubtitle.text}
@@ -206,7 +208,7 @@ export default function VideoPlayer() {
         </button>
 
         {/* 녹음 */}
-        {recordState === "READY" && (
+        {mode !== "LISTEN" && recordState === "READY" && (
           <button onClick={beginRecord}>녹음 시작</button>
         )}
         {recordState === "RECORDING" && (
@@ -217,6 +219,7 @@ export default function VideoPlayer() {
         )}
 
         <div style={{ marginTop: 8 }}>
+          <span>Mode: {mode}</span>{" "}
           <span>Speed: {playbackRate.toFixed(2)}x</span>{" "}
           <span>
             A: {A?.toFixed(2) ?? "-"} / B: {B?.toFixed(2) ?? "-"}
@@ -224,8 +227,8 @@ export default function VideoPlayer() {
           <span>State: {recordState}</span>
         </div>
 
-        {/* 평가 결과 */}
-        {evalResult && (
+        {/* 평가 */}
+        {mode === "SHADOWING" && evalResult && (
           <div style={{ marginTop: 8 }}>
             <div>Score: {evalResult.score.toFixed(2)}</div>
             <div>{evalResult.message}</div>
