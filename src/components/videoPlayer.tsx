@@ -6,13 +6,13 @@ import { subtitles } from "../hooks/subtitles";
 import { mockEvaluate } from "../engine/mockEvaluate";
 import { useSpeech } from "../speech/useSpeech";
 
-/* ---------- 타입 ---------- */
+/*타입선언 */
 
 type Segment = {
   contentId: string;
   startTime: number;
   endTime: number;
-  playbackRate: number;
+  playbackRate: number;        //컴파일 타임 전용
 };
 
 type EvalResult = {
@@ -22,29 +22,30 @@ type EvalResult = {
   weakSegments: { start: number; end: number }[];
 };
 
-type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
+type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";  //유니온 리터럴 타입
 
 
 /* ---------- 컴포넌트 ---------- */
 
 export default function VideoPlayer() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);  //Dom을 조작하는 핸들
+                                                           // 전체 기능의 기준점
 
   /* ---------- 상태 ---------- */
 
-  const [mode, setMode] = useState<PracticeMode>("SHADOWING");
+  const [mode, setMode] = useState<PracticeMode>("SHADOWING");     // 전체 동작 분기 스위치
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const [A, setAVal] = useState<number | null>(null);
+  const [A, setAVal] = useState<number | null>(null);         //구간 기준점
   const [B, setBVal] = useState<number | null>(null);
 
-  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
+  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);  // 평가 결과 캐시
 
   /* ---------- 비디오 ---------- */
-
-  const {
-    play,
+                                   
+  const {                    //dom 조작 로직을 외부 hook 분리
+    play,                    // ui는 명령만 호출
     pause,
     startLoop,
     stopLoop,
@@ -58,7 +59,7 @@ export default function VideoPlayer() {
 
   const {
     recordState,
-    start: startRecord,
+    start: startRecord,     //시작 시간/종료시간만 기록
     stop: stopRecord,
     reset: resetRecord,
     startTimeRef,
@@ -70,7 +71,7 @@ export default function VideoPlayer() {
   const speech = useSpeech("en-US");
 
   useEffect(() => {
-    if (mode !== "DICTATION") return;
+    if (mode !== "DICTATION") return;          // 어떤 상태 조합이 되었을 때 자동으로 실행되는 로직
 
     if (recordState === "RECORDING") {
       speech.start();
@@ -99,7 +100,7 @@ export default function VideoPlayer() {
   /* ---------- 키보드 ---------- */
 
   useKeyboardControl({
-    setA: () => setAVal(getTime()),
+    setA: () => setAVal(getTime()),     //키보드 비디오 제어 명령
     setB: () => setBVal(getTime()),
     toggleLoop: applyLoop,
     stop: stopLoop,
@@ -116,7 +117,7 @@ export default function VideoPlayer() {
   /* ---------- SHADOWING 평가 ---------- */
 
   useEffect(() => {
-    if (mode !== "SHADOWING") return;
+    if (mode !== "SHADOWING") return;     // 녹음 상태에 따라 음성 인식 엔진 on/off 
     if (recordState !== "DONE") return;
 
     const st = startTimeRef.current;
@@ -127,7 +128,7 @@ export default function VideoPlayer() {
       return;
     }
 
-    const segment: Segment = {
+    const segment: Segment = {        //녹음이 끝난 구간을 평가엔진 입력으로 변환
       contentId: "test.mp4",
       startTime: st,
       endTime: et,
