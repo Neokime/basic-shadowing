@@ -6,13 +6,13 @@ import { subtitles } from "../hooks/subtitles";
 import { mockEvaluate } from "../engine/mockEvaluate";
 import { useSpeech } from "../speech/useSpeech";
 
-/*타입선언 */
+/* ---------- 타입 ---------- */
 
 type Segment = {
   contentId: string;
   startTime: number;
   endTime: number;
-  playbackRate: number;        //컴파일 타임 전용
+  playbackRate: number;
 };
 
 type EvalResult = {
@@ -22,30 +22,28 @@ type EvalResult = {
   weakSegments: { start: number; end: number }[];
 };
 
-type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";  //유니온 리터럴 타입
-
+type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
 /* ---------- 컴포넌트 ---------- */
 
-export default function VideoPlayer() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);  //Dom을 조작하는 핸들
-                                                           // 전체 기능의 기준점
+export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   /* ---------- 상태 ---------- */
 
-  const [mode, setMode] = useState<PracticeMode>("SHADOWING");     // 전체 동작 분기 스위치
+  const [mode, setMode] = useState<PracticeMode>("SHADOWING");
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const [A, setAVal] = useState<number | null>(null);         //구간 기준점
+  const [A, setAVal] = useState<number | null>(null);
   const [B, setBVal] = useState<number | null>(null);
 
-  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);  // 평가 결과 캐시
+  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
 
-  /* ---------- 비디오 ---------- */
-                                   
-  const {                    //dom 조작 로직을 외부 hook 분리
-    play,                    // ui는 명령만 호출
+  /* ---------- 비디오 제어 ---------- */
+
+  const {
+    play,
     pause,
     startLoop,
     stopLoop,
@@ -55,23 +53,23 @@ export default function VideoPlayer() {
     getTime,
   } = useVideoControl(videoRef);
 
-  /* ---------- 녹음(시간 기준) ---------- */
+  /* ---------- 녹음 ---------- */
 
   const {
     recordState,
-    start: startRecord,     //시작 시간/종료시간만 기록
+    start: startRecord,
     stop: stopRecord,
     reset: resetRecord,
     startTimeRef,
     endTimeRef,
-  } = useRecordSegment();
+  } = useRecordSegment(onDone);
 
-  /* ---------- Speech (DICTATION 전용) ---------- */
+  /* ---------- Speech (DICTATION) ---------- */
 
   const speech = useSpeech("en-US");
 
   useEffect(() => {
-    if (mode !== "DICTATION") return;          // 어떤 상태 조합이 되었을 때 자동으로 실행되는 로직
+    if (mode !== "DICTATION") return;
 
     if (recordState === "RECORDING") {
       speech.start();
@@ -86,7 +84,7 @@ export default function VideoPlayer() {
     }
   }, [recordState, mode]);
 
-  /* ---------- 공통 동작 ---------- */
+  /* ---------- 공통 ---------- */
 
   const applyLoop = () => {
     if (A == null || B == null) return;
@@ -100,13 +98,13 @@ export default function VideoPlayer() {
   /* ---------- 키보드 ---------- */
 
   useKeyboardControl({
-    setA: () => setAVal(getTime()),     //키보드 비디오 제어 명령
+    setA: () => setAVal(getTime()),
     setB: () => setBVal(getTime()),
     toggleLoop: applyLoop,
     stop: stopLoop,
   });
 
-  /* ---------- A/B 변경 시 루프 갱신 ---------- */
+  /* ---------- A/B 변경 시 ---------- */
 
   useEffect(() => {
     if (A != null && B != null) {
@@ -117,18 +115,15 @@ export default function VideoPlayer() {
   /* ---------- SHADOWING 평가 ---------- */
 
   useEffect(() => {
-    if (mode !== "SHADOWING") return;     // 녹음 상태에 따라 음성 인식 엔진 on/off 
+    if (mode !== "SHADOWING") return;
     if (recordState !== "DONE") return;
 
     const st = startTimeRef.current;
     const et = endTimeRef.current;
 
-    if (st == null || et == null || et <= st) {
-      console.log("[EVAL SKIP] invalid segment", { st, et });
-      return;
-    }
+    if (st == null || et == null || et <= st) return;
 
-    const segment: Segment = {        //녹음이 끝난 구간을 평가엔진 입력으로 변환
+    const segment: Segment = {
       contentId: "test.mp4",
       startTime: st,
       endTime: et,
@@ -137,7 +132,6 @@ export default function VideoPlayer() {
 
     const result = mockEvaluate(segment);
     setEvalResult(result);
-    console.log("[EVAL RESULT]", result);
   }, [recordState, mode, playbackRate]);
 
   /* ---------- 자막 ---------- */
