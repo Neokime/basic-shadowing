@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useVideoControl } from "../hooks/useVideoControl";
 import { useKeyboardControl } from "../hooks/useKeyboardControl";
 import { useRecordSegment } from "../hooks/useRecordSegment";
-import { subtitles } from "../hooks/subtitles";
 import { mockEvaluate } from "../engine/mockEvaluate";
 import { useSpeech } from "../speech/useSpeech";
+import data from "../data/index.json";
 
 /* ---------- 타입 ---------- */
 
@@ -24,10 +24,20 @@ type EvalResult = {
 
 type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
+type Item = {
+  id: string;
+  audio: string;
+  text: string;
+};
+
 /* ---------- 컴포넌트 ---------- */
 
 export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  /* ---------- 데이터 ---------- */
+
+  const [currentItem] = useState<Item>(data[0]); // 일단 고정
 
   /* ---------- 상태 ---------- */
 
@@ -40,7 +50,7 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
 
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
 
-  /* ---------- 비디오 제어 ---------- */
+  /* ---------- 오디오 제어 ---------- */
 
   const {
     play,
@@ -51,7 +61,7 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     playbackRate,
     setLoopRange,
     getTime,
-  } = useVideoControl(videoRef);
+  } = useVideoControl(audioRef);
 
   /* ---------- 녹음 ---------- */
 
@@ -64,23 +74,17 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     endTimeRef,
   } = useRecordSegment(onDone);
 
-  /* ---------- Speech (DICTATION) ---------- */
+  /* ---------- Dictation ---------- */
 
   const speech = useSpeech("en-US");
 
   useEffect(() => {
     if (mode !== "DICTATION") return;
 
-    if (recordState === "RECORDING") {
-      speech.start();
-    }
-
+    if (recordState === "RECORDING") speech.start();
     if (recordState === "DONE") {
       speech.stop();
-      console.log("[DICTATION]", {
-        spoken: speech.hasSpoken,
-        transcript: speech.transcript,
-      });
+      console.log("[DICTATION]", speech.transcript);
     }
   }, [recordState, mode]);
 
@@ -104,12 +108,8 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     stop: stopLoop,
   });
 
-  /* ---------- A/B 변경 시 ---------- */
-
   useEffect(() => {
-    if (A != null && B != null) {
-      setLoopRange(A, B);
-    }
+    if (A != null && B != null) setLoopRange(A, B);
   }, [A, B, setLoopRange]);
 
   /* ---------- SHADOWING 평가 ---------- */
@@ -120,25 +120,17 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
 
     const st = startTimeRef.current;
     const et = endTimeRef.current;
-
     if (st == null || et == null || et <= st) return;
 
     const segment: Segment = {
-      contentId: "test.mp4",
+      contentId: currentItem.id,
       startTime: st,
       endTime: et,
       playbackRate,
     };
 
-    const result = mockEvaluate(segment);
-    setEvalResult(result);
-  }, [recordState, mode, playbackRate]);
-
-  /* ---------- 자막 ---------- */
-
-  const activeSubtitle = subtitles.find(
-    (s) => currentTime >= s.start && currentTime <= s.end
-  );
+    setEvalResult(mockEvaluate(segment));
+  }, [recordState, mode, playbackRate, currentItem]);
 
   /* ---------- UI ---------- */
 
@@ -151,32 +143,20 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
         <button onClick={() => setMode("DICTATION")}>Dictation</button>
       </div>
 
-      {/* 비디오 */}
-      <div style={{ position: "relative", width: 640 }}>
-        <video
-          ref={videoRef}
-          width={640}
-          controls
-          src="/videos/test.mp4"
-          onTimeUpdate={() => setCurrentTime(getTime())}
-        />
+      {/* 오디오 */}
+      <audio
+        ref={audioRef}
+        controls
+        src={currentItem.audio}
+        onTimeUpdate={() => setCurrentTime(getTime())}
+      />
 
-        {showSubtitle && activeSubtitle && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 64,
-              left: "50%",
-              transform: "translateX(-50%)",
-              color: "white",
-              fontSize: 22,
-              textShadow: "0 2px 8px rgba(0,0,0,0.9)",
-            }}
-          >
-            {activeSubtitle.text}
-          </div>
-        )}
-      </div>
+      {/* 자막 */}
+      {showSubtitle && (
+        <div style={{ marginTop: 8, fontSize: 18, fontWeight: 500 }}>
+          {currentItem.text}
+        </div>
+      )}
 
       {/* 컨트롤 */}
       <div style={{ marginTop: 10 }}>
