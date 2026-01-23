@@ -24,20 +24,25 @@ type EvalResult = {
 
 type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
+type Media =
+  | { type: "audio"; src: string }
+  | { type: "video"; src: string };
+
 type Item = {
   id: string;
-  audio: string;
+  media: Media;
   text: string;
 };
 
 /* ---------- 컴포넌트 ---------- */
 
 export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRef = useRef<HTMLMediaElement | null>(null);
 
   /* ---------- 데이터 ---------- */
 
-  const [currentItem] = useState<Item>(data[0]); // 일단 고정
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentItem: Item = data[currentIndex];
 
   /* ---------- 상태 ---------- */
 
@@ -50,7 +55,7 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
 
   const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
 
-  /* ---------- 오디오 제어 ---------- */
+  /* ---------- 미디어 제어 ---------- */
 
   const {
     play,
@@ -61,7 +66,7 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     playbackRate,
     setLoopRange,
     getTime,
-  } = useVideoControl(audioRef);
+  } = useVideoControl(mediaRef);
 
   /* ---------- 녹음 ---------- */
 
@@ -88,7 +93,7 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     }
   }, [recordState, mode]);
 
-  /* ---------- 공통 ---------- */
+  /* ---------- 루프 ---------- */
 
   const applyLoop = () => {
     if (A == null || B == null) return;
@@ -132,6 +137,17 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     setEvalResult(mockEvaluate(segment));
   }, [recordState, mode, playbackRate, currentItem]);
 
+  /* ---------- 다음 콘텐츠 ---------- */
+
+  const nextItem = () => {
+    stopLoop();
+    setAVal(null);
+    setBVal(null);
+    setEvalResult(null);
+    resetRecord();
+    setCurrentIndex((i) => (i + 1) % data.length);
+  };
+
   /* ---------- UI ---------- */
 
   return (
@@ -143,13 +159,23 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
         <button onClick={() => setMode("DICTATION")}>Dictation</button>
       </div>
 
-      {/* 오디오 */}
-      <audio
-        ref={audioRef}
-        controls
-        src={currentItem.audio}
-        onTimeUpdate={() => setCurrentTime(getTime())}
-      />
+      {/* 미디어 */}
+      {currentItem.media.type === "video" ? (
+        <video
+          ref={mediaRef as React.RefObject<HTMLVideoElement>}
+          controls
+          src={currentItem.media.src}
+          onTimeUpdate={() => setCurrentTime(getTime())}
+          width={640}
+        />
+      ) : (
+        <audio
+          ref={mediaRef as React.RefObject<HTMLAudioElement>}
+          controls
+          src={currentItem.media.src}
+          onTimeUpdate={() => setCurrentTime(getTime())}
+        />
+      )}
 
       {/* 자막 */}
       {showSubtitle && (
@@ -190,7 +216,10 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
           <button onClick={finishRecord}>완료</button>
         )}
         {recordState === "DONE" && (
-          <button onClick={resetRecord}>다시 연습</button>
+          <>
+            <button onClick={resetRecord}>다시 연습</button>
+            <button onClick={nextItem}>다음</button>
+          </>
         )}
 
         <div style={{ marginTop: 8 }}>

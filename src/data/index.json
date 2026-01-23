@@ -1,17 +1,26 @@
 [
   {
     "id": "en_1213",
-    "audio": "/audio/common_voice_en_1213.mp3",
+    "media": {
+      "type": "audio",
+      "src": "/audio/common_voice_en_1213.mp3"
+    },
     "text": "It seemed he had made the long journey for nothing."
   },
   {
     "id": "en_1214",
-    "audio": "/audio/common_voice_en_1214.mp3",
+    "media": {
+      "type": "audio",
+      "src": "/audio/common_voice_en_1214.mp3"
+    },
     "text": "In his hand, he grasped a snake by the tail."
   },
   {
     "id": "en_1215",
-    "audio": "/audio/common_voice_en_1215.mp3",
+    "media": {
+      "type": "audio",
+      "src": "/audio/common_voice_en_1215.mp3"
+    },
     "text": "He had been so far away that his face wasn't even visible."
   }
 ]
