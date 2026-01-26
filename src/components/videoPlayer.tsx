@@ -3,24 +3,7 @@ import { useVideoControl } from "../hooks/useVideoControl";
 import { useKeyboardControl } from "../hooks/useKeyboardControl";
 import { useRecordSegment } from "../hooks/useRecordSegment";
 import { mockEvaluate } from "../engine/mockEvaluate";
-import { useSpeech } from "../speech/useSpeech";
 import data from "../data/index.json";
-
-/* ---------- 타입 ---------- */
-
-type Segment = {
-  contentId: string;
-  startTime: number;
-  endTime: number;
-  playbackRate: number;
-};
-
-type EvalResult = {
-  score: number;
-  state: "good" | "partial_mismatch" | "global_mismatch";
-  message: string;
-  weakSegments: { start: number; end: number }[];
-};
 
 type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
@@ -34,28 +17,28 @@ type Item = {
   text: string;
 };
 
-/* ---------- 컴포넌트 ---------- */
+type Props = {
+  onDone?: () => void;
+  onResult?: (result: any) => void;
+  onSessionEnd?: () => void;
+};
 
-export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
+export default function VideoPlayer({
+  onDone,
+  onResult,
+  onSessionEnd,
+}: Props) {
   const mediaRef = useRef<HTMLMediaElement | null>(null);
 
-  /* ---------- 데이터 ---------- */
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentItem: Item = data[currentIndex];
-
-  /* ---------- 상태 ---------- */
+  const [index, setIndex] = useState(0);
+  const item: Item = data[index];
 
   const [mode, setMode] = useState<PracticeMode>("SHADOWING");
   const [showSubtitle, setShowSubtitle] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
 
-  const [A, setAVal] = useState<number | null>(null);
-  const [B, setBVal] = useState<number | null>(null);
-
-  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
-
-  /* ---------- 미디어 제어 ---------- */
+  const [A, setA] = useState<number | null>(null);
+  const [B, setB] = useState<number | null>(null);
+  const [evalResult, setEvalResult] = useState<any>(null);
 
   const {
     play,
@@ -68,133 +51,113 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
     getTime,
   } = useVideoControl(mediaRef);
 
-  /* ---------- 녹음 ---------- */
+  /* ================= 녹음 완료 콜백 ================= */
+  const onRecordDone = async ({
+    startTime,
+    endTime,
+    audioBlob,
+  }: {
+    startTime: number;
+    endTime: number;
+    audioBlob: Blob;
+  }) => {
+    /* 1. 녹음 파일 업로드 */
+    const formData = new FormData();
+    formData.append("itemId", item.id);
+    formData.append("audio", audioBlob, "recording.webm");
 
-  const {
-    recordState,
-    start: startRecord,
-    stop: stopRecord,
-    reset: resetRecord,
-    startTimeRef,
-    endTimeRef,
-  } = useRecordSegment(onDone);
+    await fetch("http://localhost:8087/practice/record", {
+      method: "POST",
+      body: formData,
+    });
 
-  /* ---------- Dictation ---------- */
+    /* 2. 평가 */
+    const result = mockEvaluate({
+      contentId: item.id,
+      startTime,
+      endTime,
+      playbackRate,
+    });
 
-  const speech = useSpeech("en-US");
+    setEvalResult(result);
 
-  useEffect(() => {
-    if (mode !== "DICTATION") return;
+    /* 3. 세션 결과 전달 */
+    onResult?.({
+      itemId: item.id,
+      score: result.score,
+      state: result.state,
+      startTime,
+      endTime,
+    });
 
-    if (recordState === "RECORDING") speech.start();
-    if (recordState === "DONE") {
-      speech.stop();
-      console.log("[DICTATION]", speech.transcript);
-    }
-  }, [recordState, mode]);
+    /* 4. 히스토리 갱신 */
+    onDone?.();
+  };
 
-  /* ---------- 루프 ---------- */
+  const { recordState, start, stop, reset } =
+    useRecordSegment(onRecordDone);
 
+  /* ================= 루프 ================= */
   const applyLoop = () => {
     if (A == null || B == null) return;
     setLoopRange(A, B);
     startLoop(true);
   };
 
-  const beginRecord = () => startRecord(getTime());
-  const finishRecord = () => stopRecord(getTime());
-
-  /* ---------- 키보드 ---------- */
-
   useKeyboardControl({
-    setA: () => setAVal(getTime()),
-    setB: () => setBVal(getTime()),
+    setA: () => setA(getTime()),
+    setB: () => setB(getTime()),
     toggleLoop: applyLoop,
     stop: stopLoop,
   });
 
   useEffect(() => {
     if (A != null && B != null) setLoopRange(A, B);
-  }, [A, B, setLoopRange]);
+  }, [A, B]);
 
-  /* ---------- SHADOWING 평가 ---------- */
-
-  useEffect(() => {
-    if (mode !== "SHADOWING") return;
-    if (recordState !== "DONE") return;
-
-    const st = startTimeRef.current;
-    const et = endTimeRef.current;
-    if (st == null || et == null || et <= st) return;
-
-    const segment: Segment = {
-      contentId: currentItem.id,
-      startTime: st,
-      endTime: et,
-      playbackRate,
-    };
-
-    setEvalResult(mockEvaluate(segment));
-  }, [recordState, mode, playbackRate, currentItem]);
-
-  /* ---------- 다음 콘텐츠 ---------- */
-
-  const nextItem = () => {
+  /* ================= 다음 콘텐츠 ================= */
+  const next = () => {
     stopLoop();
-    setAVal(null);
-    setBVal(null);
+    setA(null);
+    setB(null);
     setEvalResult(null);
-    resetRecord();
-    setCurrentIndex((i) => (i + 1) % data.length);
+    reset();
+    setIndex((i) => (i + 1) % data.length);
+    onSessionEnd?.();
   };
-
-  /* ---------- UI ---------- */
 
   return (
     <div style={{ width: 640 }}>
       {/* 모드 */}
-      <div style={{ marginBottom: 8 }}>
+      <div>
         <button onClick={() => setMode("LISTEN")}>Listen</button>
         <button onClick={() => setMode("SHADOWING")}>Shadowing</button>
         <button onClick={() => setMode("DICTATION")}>Dictation</button>
       </div>
 
       {/* 미디어 */}
-      {currentItem.media.type === "video" ? (
+      {item.media.type === "video" ? (
         <video
-          ref={mediaRef as React.RefObject<HTMLVideoElement>}
+          ref={mediaRef as any}
           controls
-          src={currentItem.media.src}
-          onTimeUpdate={() => setCurrentTime(getTime())}
           width={640}
+          src={item.media.src}
         />
       ) : (
-        <audio
-          ref={mediaRef as React.RefObject<HTMLAudioElement>}
-          controls
-          src={currentItem.media.src}
-          onTimeUpdate={() => setCurrentTime(getTime())}
-        />
+        <audio ref={mediaRef as any} controls src={item.media.src} />
       )}
 
       {/* 자막 */}
-      {showSubtitle && (
-        <div style={{ marginTop: 8, fontSize: 18, fontWeight: 500 }}>
-          {currentItem.text}
-        </div>
-      )}
+      {showSubtitle && <div>{item.text}</div>}
 
       {/* 컨트롤 */}
-      <div style={{ marginTop: 10 }}>
+      <div>
         <button onClick={play}>Play</button>
         <button onClick={pause}>Pause</button>
 
-        <button onClick={() => setAVal(getTime())}>Set A</button>
-        <button onClick={() => setBVal(getTime())}>Set B</button>
-
-        <button onClick={applyLoop} disabled={A == null || B == null}>
-          A–B Loop
-        </button>
+        <button onClick={() => setA(getTime())}>Set A</button>
+        <button onClick={() => setB(getTime())}>Set B</button>
+        <button onClick={applyLoop}>A–B Loop</button>
         <button onClick={stopLoop}>Loop Stop</button>
 
         <button onClick={() => setPlaybackRate(playbackRate - 0.05)}>
@@ -205,40 +168,31 @@ export default function VideoPlayer({ onDone }: { onDone?: () => void }) {
         </button>
 
         <button onClick={() => setShowSubtitle((v) => !v)}>
-          {showSubtitle ? "자막 끄기" : "자막 켜기"}
+          자막 {showSubtitle ? "끄기" : "켜기"}
         </button>
 
         {/* 녹음 */}
-        {mode !== "LISTEN" && recordState === "READY" && (
-          <button onClick={beginRecord}>녹음 시작</button>
+        {recordState === "READY" && mode !== "LISTEN" && (
+          <button onClick={() => start(getTime())}>녹음 시작</button>
         )}
         {recordState === "RECORDING" && (
-          <button onClick={finishRecord}>완료</button>
+          <button onClick={() => stop(getTime())}>완료</button>
         )}
         {recordState === "DONE" && (
           <>
-            <button onClick={resetRecord}>다시 연습</button>
-            <button onClick={nextItem}>다음</button>
+            <button onClick={reset}>다시 연습</button>
+            <button onClick={next}>다음</button>
           </>
         )}
-
-        <div style={{ marginTop: 8 }}>
-          <span>Mode: {mode}</span>{" "}
-          <span>Speed: {playbackRate.toFixed(2)}x</span>{" "}
-          <span>
-            A: {A?.toFixed(2) ?? "-"} / B: {B?.toFixed(2) ?? "-"}
-          </span>{" "}
-          <span>State: {recordState}</span>
-        </div>
-
-        {/* 평가 */}
-        {mode === "SHADOWING" && evalResult && (
-          <div style={{ marginTop: 8 }}>
-            <div>Score: {evalResult.score.toFixed(2)}</div>
-            <div>{evalResult.message}</div>
-          </div>
-        )}
       </div>
+
+      {/* 평가 결과 */}
+      {evalResult && (
+        <div>
+          <div>Score: {evalResult.score.toFixed(2)}</div>
+          <div>{evalResult.message}</div>
+        </div>
+      )}
     </div>
   );
 }

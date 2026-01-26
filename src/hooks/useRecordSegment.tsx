@@ -1,55 +1,75 @@
 import { useState, useRef } from "react";
-import { mockEvaluate } from "../engine/mockEvaluate";
 
-type RecordState = "READY" | "RECORDING" | "DONE";
+export type RecordState = "READY" | "RECORDING" | "DONE";
 
-export function useRecordSegment(onDone?: () => void) {
+type RecordDonePayload = {
+  startTime: number;
+  endTime: number;
+  audioBlob: Blob;
+};
+
+export function useRecordSegment(
+  onDone?: (payload: RecordDonePayload) => void
+) {
   const [recordState, setRecordState] = useState<RecordState>("READY");
 
   const startTimeRef = useRef<number | null>(null);
   const endTimeRef = useRef<number | null>(null);
 
-  function start(currentTime: number) {
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+
+  async function start(currentTime: number) {
     if (recordState !== "READY") return;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
+    chunksRef.current = [];
+
+    recorder.ondataavailable = (e) => {
+      chunksRef.current.push(e.data);
+    };
+
+    recorder.start();
 
     startTimeRef.current = currentTime;
     endTimeRef.current = null;
     setRecordState("RECORDING");
   }
 
-  async function stop(currentTime: number) {
+  function stop(currentTime: number) {
     if (recordState !== "RECORDING") return;
 
     endTimeRef.current = currentTime;
     setRecordState("DONE");
 
-    const evalResult = mockEvaluate({
-      start: startTimeRef.current,
-      end: endTimeRef.current,
-    });
+    const recorder = mediaRecorderRef.current;
+    if (!recorder) return;
 
-    const payload = {
-      mode: "SHADOWING",
-      hasSpoken: true,
-      score: evalResult.score ?? null,
-      state: evalResult.state ?? null,
-      weakSegments: evalResult.weakSegments ?? [],
+    recorder.onstop = () => {
+      const audioBlob = new Blob(chunksRef.current, {
+        type: "audio/webm",
+      });
+
+      onDone?.({
+        startTime: startTimeRef.current!,
+        endTime: endTimeRef.current!,
+        audioBlob,
+      });
+
+      recorder.stream.getTracks().forEach((t) => t.stop());
     };
 
-  
-    await fetch("http://localhost:8087/practice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    
-    onDone?.();
+    recorder.stop();
   }
 
   function reset() {
     startTimeRef.current = null;
     endTimeRef.current = null;
+    chunksRef.current = [];
+    mediaRecorderRef.current = null;
     setRecordState("READY");
   }
 
@@ -58,7 +78,5 @@ export function useRecordSegment(onDone?: () => void) {
     start,
     stop,
     reset,
-    startTimeRef,
-    endTimeRef,
   };
 }
