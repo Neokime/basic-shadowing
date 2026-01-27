@@ -1,42 +1,153 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* App.css - 최종 완성 버전 */
+
+.app-container {
+  min-height: 100vh;
+  padding: 64px 24px 96px;
+  background: linear-gradient(to bottom, #f9fafb 0%, #f0f2f5 100%);
+}
+
+.app-title {
   text-align: center;
+  font-size: 28px;
+  font-weight: 400;
+  color: #1a1d24;
+  margin-bottom: 48px;
+  letter-spacing: -0.5px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* ============================================
+   Session Summary
+   ============================================ */
+
+.session-summary {
+  max-width: 720px;
+  margin: 56px auto 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 32px 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.session-summary-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1a1d24;
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+
+.session-summary p {
+  color: #5a5f6a;
+  font-size: 15px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.session-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.session-summary span {
+  font-weight: 700;
+  color: #1a1d24;
+}
+
+/* ============================================
+   Debug Section
+   ============================================ */
+
+.debug-section {
+  max-width: 720px;
+  margin: 56px auto 0;
+}
+
+.debug-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.debug-content {
+  font-size: 12px;
+  font-family: "SF Mono", "Monaco", "Menlo", "Consolas", "Courier New", monospace;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  overflow: auto;
+  color: #6b7280;
+  max-height: 320px;
+  line-height: 1.6;
+}
+
+/* ============================================
+   반응형
+   ============================================ */
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 48px 16px 72px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .app-title {
+    font-size: 24px;
+    margin-bottom: 36px;
+  }
+
+  .session-summary {
+    padding: 24px 28px;
+    margin-top: 48px;
+    border-radius: 16px;
+  }
+
+  .session-summary-title {
+    font-size: 17px;
+  }
+
+  .session-summary p {
+    font-size: 14px;
+  }
+
+  .debug-section {
+    margin-top: 48px;
+  }
+
+  .debug-content {
+    padding: 16px;
+    font-size: 11px;
+    max-height: 280px;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@media (max-width: 480px) {
+  .app-container {
+    padding: 32px 12px 56px;
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .app-title {
+    font-size: 22px;
+    margin-bottom: 28px;
+  }
 
-.read-the-docs {
-  color: #888;
+  .session-summary {
+    padding: 20px 24px;
+    margin-top: 40px;
+  }
+
+  .session-summary-title {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .session-summary p {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
 }

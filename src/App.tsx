@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import VideoPlayer from "./components/videoPlayer";
+import "./App.css";
 
 type SessionResult = {
   itemId: string;
@@ -22,7 +23,10 @@ function App() {
   const [history, setHistory] = useState<any[]>([]);
 
   /** 세션 단위 결과 */
-  const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
+  const [sessionResults, setSessionResults] =
+  useState<SessionResult[]>([]);
+
+
 
   /** 세션 요약 */
   const [sessionSummary, setSessionSummary] =
@@ -71,8 +75,8 @@ function App() {
   };
 
   return (
-    <div>
-      <h2>English Shadowing Player v0</h2>
+    <div className="app-container">
+      <h2 className="app-title">English Shadowing Player v0</h2>
 
       <VideoPlayer
         onDone={fetchHistory}
@@ -82,14 +86,26 @@ function App() {
         onSessionEnd={endSession}
       />
 
-      <h3>Session (debug)</h3>
-      <pre>{JSON.stringify(sessionResults, null, 2)}</pre>
+      <div className="debug-section">
+        <h3 className="debug-title">Session (debug)</h3>
+        <pre className="debug-content">{JSON.stringify(sessionResults, null, 2)}</pre>
+      </div>
 
-      <h3>Session Summary (debug)</h3>
-      <pre>{JSON.stringify(sessionSummary, null, 2)}</pre>
+      {sessionSummary && (
+      <div className="session-summary">
+        <h3 className="session-summary-title">Session Summary</h3>
+        <p>연습 문장 수: <span>{sessionSummary.totalAttempts}</span></p>
+        <p>평균 점수: <span>{sessionSummary.avgScore}</span></p>
+        <p>최고 점수: <span>{sessionSummary.bestScore}</span></p>
+        <p>가장 어려웠던 문장: <span>{sessionSummary.weakestItemId}</span></p>
+      </div>
+      )}
 
-      <h3>Practice History (debug)</h3>
-      <pre>{JSON.stringify(history, null, 2)}</pre>
+
+      <div className="debug-section">
+        <h3 className="debug-title">Practice History (debug)</h3>
+        <pre className="debug-content">{JSON.stringify(history, null, 2)}</pre>
+      </div>
     </div>
   );
 }

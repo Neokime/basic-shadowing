@@ -22,5 +22,19 @@
       "src": "/audio/common_voice_en_1215.mp3"
     },
     "text": "He had been so far away that his face wasn't even visible."
-  }
+  },
+
+  {
+  "id": "sherlock",
+  "media": {
+    "type": "video",
+    "src": "/videos/sherlock.mp4"
+  },
+  "lines": [
+    { "start": 0.0, "end": 5.0, "text": "I think you'll find..." },
+    { "start": 5.0, "end": 7.5, "text": "No, sorry, not now, please." },
+    { "start": 7.5, "end": 10.5, "text": "Like a gaze from a crowd of strangers..." }
+  ]
+}
+
 ]
