@@ -70,35 +70,18 @@ export function useVideoControl(videoRef: RefObject<HTMLVideoElement | null>) {
 
     const onTimeUpdate = () => {
       if (!loopingRef.current) return;
+      if (rangeRef.current.a == null || rangeRef.current.b == null) return;
 
-      const { a, b } = rangeRef.current;
-      if (a == null || b == null) return;
-
-      const t = v.currentTime;
-
-      if (t < a) {
-        v.currentTime = a;
-        return;
-      }
-
-      if (t >= b) {
-        countRef.current += 1;
-        const before = t;
-        v.currentTime = a;
-
-        if ((v as any).__loopDebug) {
-          console.log(
-            `[JUMP #${countRef.current}] ${before.toFixed(
-              3
-            )} → ${a.toFixed(3)}`
-          );
-        }
+      if (v.currentTime >= rangeRef.current.b) {
+        v.currentTime = rangeRef.current.a;
+        v.play();
       }
     };
 
     v.addEventListener("timeupdate", onTimeUpdate);
     return () => v.removeEventListener("timeupdate", onTimeUpdate);
-  }, [videoRef]);
+  }, []);
+
 
   useEffect(() => {
     const v = videoRef.current;
