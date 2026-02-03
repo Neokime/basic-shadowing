@@ -1,84 +1,77 @@
 .app-container {
   min-height: 100vh;
   padding: 72px 28px 120px;
-  background: #fafbfc;
+  background: #000000;
 }
 
 .app-title {
-  text-align: left;
+  text-align: center;
   font-size: 38px;
   font-weight: 700;
-  color: #0a0e17;
-  margin-bottom: 48px;
-  max-width: 820px;
+  color: #ffffff;
+  margin-bottom: 56px;
+  letter-spacing: -0.5px;
+  max-width: 840px;
   margin-left: auto;
   margin-right: auto;
-  letter-spacing: -0.5px;
+  text-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
 }
 
 .session-summary {
-  max-width: 820px;
-  margin: 60px auto 0;
-  background: #fff;
-  border: 1px solid #e8eaed;
-  border-radius: 16px;
-  padding: 32px 36px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  max-width: 840px;
+  margin: 64px auto 0;
+  background: #0a0a0a;
+  border: 1px solid #1f1f1f;
+  border-radius: 20px;
+  padding: 36px 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .session-summary-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: #0a0e17;
-  margin-bottom: 20px;
+  color: #00ff88;
+  margin-bottom: 24px;
 }
 
 .session-summary p {
   display: flex;
   justify-content: space-between;
-  color: #5f6368;
+  color: #999;
   font-size: 15px;
-  margin-bottom: 12px;
-  line-height: 1.5;
+  margin-bottom: 14px;
+  line-height: 1.6;
 }
 
 .session-summary span {
   font-weight: 700;
-  color: #0a0e17;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 .debug-section {
-  max-width: 820px;
-  margin: 60px auto 0;
+  max-width: 840px;
+  margin: 64px auto 0;
 }
 
 .debug-title {
   font-size: 11px;
   font-weight: 700;
-  color: #9aa0a6;
-  margin-bottom: 10px;
+  color: #666;
+  margin-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
 .debug-content {
   font-size: 13px;
   font-family: 'Menlo', monospace;
-  background: #fff;
-  border: 1px solid #e8eaed;
-  border-radius: 12px;
-  padding: 20px;
+  background: #0a0a0a;
+  border: 1px solid #1f1f1f;
+  border-radius: 16px;
+  padding: 24px;
   overflow: auto;
-  color: #5f6368;
-  max-height: 360px;
-  line-height: 1.5;
-}
-
-@media (max-width: 768px) {
-  .app-container {
-    padding: 56px 20px 100px;
-  }
-  .app-title {
-    font-size: 30px;
-  }
+  color: #999;
+  max-height: 400px;
+  line-height: 1.6;
 }

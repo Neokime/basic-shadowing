@@ -450,36 +450,36 @@ useEffect(() => {
         </div>
 
         {/* SHADOWING */}
-        {mode === "SHADOWING" && (
-          <div className="record-section">
-            {recordState === "READY" && (
-              <button
-                className="btn-record"
-                onClick={() => start(getTime())}
-              >
-                Start Recording
+      {mode === "SHADOWING" && (
+        <div className="record-section">
+          {recordState === "READY" && (
+            <button
+              className="btn-record"
+              onClick={() => start(getTime())}
+            >
+              Start Recording
+            </button>
+          )}
+          {recordState === "RECORDING" && (
+            <button
+              className="btn-record recording"
+              onClick={() => stop(getTime())}
+            >
+              Recording…
+            </button>
+          )}
+          {recordState === "DONE" && (
+            <div className="done-actions">
+              <button className="btn-reset" onClick={reset}>
+                Try Again
               </button>
-            )}
-            {recordState === "RECORDING" && (
-              <button
-                className="btn-record recording"
-                onClick={() => stop(getTime())}
-              >
-                Recording…
+              <button className="btn-next" onClick={next}>
+                Next
               </button>
-            )}
-            {recordState === "DONE" && (
-              <div className="done-actions">
-                <button className="btn-reset" onClick={reset}>
-                  Try Again
-                </button>
-                <button className="btn-next" onClick={next}>
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
         {/* DICTATION */}
         {mode === "DICTATION" && (
