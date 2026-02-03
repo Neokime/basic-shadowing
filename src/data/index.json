@@ -1,40 +1,599 @@
 [
   {
-    "id": "en_1213",
+    "id": "session_1",
     "media": {
       "type": "audio",
-      "src": "/audio/common_voice_en_1213.mp3"
+      "src": "/audio/session_1.wav"
     },
-    "text": "It seemed he had made the long journey for nothing."
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 9.0,
+        "text": "Northanger Abbey. This little work was finished in the year 1803 and intended for immediate publication."
+      },
+      {
+        "start": 9.0,
+        "end": 17.0,
+        "text": "It was disposed of to a bookseller. It was even advertised, neither the author nor the public have any other concern,"
+      },
+      {
+        "start": 17.0,
+        "end": 24.0,
+        "text": "than as some observation is necessary upon those parts of the work which 13 years have made comparatively obsolete."
+      },
+      {
+        "start": 25.0,
+        "end": 32.0,
+        "text": "The public are intreated to bear in mind that 13 years have passed since it was finished, many more since it was begun,"
+      },
+      {
+        "start": 32.0,
+        "end": 40.0,
+        "text": "and that during that period places, manners, books, and opinions have undergone considerable changes."
+      }
+    ]
   },
   {
-    "id": "en_1214",
+    "id": "session_10",
     "media": {
       "type": "audio",
-      "src": "/audio/common_voice_en_1214.mp3"
+      "src": "/audio/session_10.wav"
     },
-    "text": "In his hand, he grasped a snake by the tail."
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 8.04,
+        "text": "Many a flower is born to blush unseen and waste its fragrance on the desert air."
+      },
+      {
+        "start": 8.04,
+        "end": 15.84,
+        "text": "From Thompson that it is a delightful task to teach the young idea how to shoot."
+      },
+      {
+        "start": 15.84,
+        "end": 22.4,
+        "text": "And from Shakespeare she gained a great store of information among the rest that trifles"
+      },
+      {
+        "start": 22.4,
+        "end": 29.24,
+        "text": "light as air are to the jealous confirmation strong as proofs of holy writ."
+      },
+      {
+        "start": 29.24,
+        "end": 36.4,
+        "text": "That the poor beetle which we tread upon in corporal sufferance feels a pang as great as"
+      },
+      {
+        "start": 36.4,
+        "end": 39.76,
+        "text": "when a giant dies."
+      },
+      {
+        "start": 39.76,
+        "end": 41.88,
+        "text": "And that a young woman in love always looks."
+      }
+    ]
   },
   {
-    "id": "en_1215",
+    "id": "session_11",
     "media": {
       "type": "audio",
-      "src": "/audio/common_voice_en_1215.mp3"
+      "src": "/audio/session_11.wav"
     },
-    "text": "He had been so far away that his face wasn't even visible."
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 6.44,
+        "text": "Like patience on a monument, smiling at grief."
+      },
+      {
+        "start": 6.44,
+        "end": 11.8,
+        "text": "So far, her improvement was sufficient, and in many other points she came on exceedingly"
+      },
+      {
+        "start": 11.8,
+        "end": 17.08,
+        "text": "well, for though she could not write sonnets, she brought herself to read them, and though"
+      },
+      {
+        "start": 17.08,
+        "end": 22.0,
+        "text": "there seemed no chance of her throwing a whole party into raptures by a prelude on the"
+      },
+      {
+        "start": 22.0,
+        "end": 27.6,
+        "text": "piano forte of her own composition, she could listen to other people's performance with"
+      },
+      {
+        "start": 27.6,
+        "end": 29.64,
+        "text": "very little fatigue."
+      },
+      {
+        "start": 29.64,
+        "end": 32.56,
+        "text": "Her greatest deficiency was in the pencil."
+      },
+      {
+        "start": 32.56,
+        "end": 38.36,
+        "text": "She had no notion of drawing, not enough even to attempt a sketch of her lover's profile"
+      },
+      {
+        "start": 38.36,
+        "end": 40.28,
+        "text": "that she might be detected in the design."
+      }
+    ]
   },
-
   {
-  "id": "sherlock",
-  "media": {
-    "type": "video",
-    "src": "/videos/sherlock.mp4"
+    "id": "session_12",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_12.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 7.12,
+        "text": "There she fell miserably short of the true heroic height. At present she did not know her"
+      },
+      {
+        "start": 7.12,
+        "end": 13.8,
+        "text": "own poverty, for she had no lover to portray. She had reached the age of seventeen, without"
+      },
+      {
+        "start": 13.8,
+        "end": 20.02,
+        "text": "having seen one amiable youth who could call forth her sensibility, without having inspired"
+      },
+      {
+        "start": 20.02,
+        "end": 26.36,
+        "text": "one real passion, and without having excited even any admiration but what was very moderate"
+      },
+      {
+        "start": 26.36,
+        "end": 33.36,
+        "text": "and very transient. This was strange indeed, but strange things may be generally accounted"
+      },
+      {
+        "start": 33.36,
+        "end": 39.8,
+        "text": "for if their cause be fairly searched out. There was not one Lord in the neighborhood,"
+      },
+      {
+        "start": 39.8,
+        "end": 46.8,
+        "text": "no, not even a baronet."
+      }
+    ]
   },
-  "lines": [
-    { "start": 0.0, "end": 5.0, "text": "I think you'll find..." },
-    { "start": 5.0, "end": 7.5, "text": "No, sorry, not now, please." },
-    { "start": 7.5, "end": 10.5, "text": "Like a gaze from a crowd of strangers..." }
-  ]
-}
-
+  {
+    "id": "session_13",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_13.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 6.2,
+        "text": "There was not one family among their acquaintance who had reared and supported a boy accidentally"
+      },
+      {
+        "start": 6.2,
+        "end": 8.36,
+        "text": "found at their door."
+      },
+      {
+        "start": 8.36,
+        "end": 11.92,
+        "text": "Not one young man whose origin was unknown."
+      },
+      {
+        "start": 11.92,
+        "end": 16.84,
+        "text": "Her father had no ward, and the squire of the parish no children."
+      },
+      {
+        "start": 16.84,
+        "end": 22.56,
+        "text": "But, when a young lady is to be a heroine, the perverseness of forty surrounding families"
+      },
+      {
+        "start": 22.56,
+        "end": 24.64,
+        "text": "cannot prevent her."
+      },
+      {
+        "start": 24.64,
+        "end": 30.52,
+        "text": "Nothing must and will happen to throw a hero in her way."
+      },
+      {
+        "start": 30.52,
+        "end": 31.52,
+        "text": "Mr. Allen"
+      }
+    ]
+  },
+  {
+    "id": "session_2",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_2.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 1.0,
+        "text": "1."
+      },
+      {
+        "start": 1.0,
+        "end": 9.08,
+        "text": "No one who had ever seen Catherine Morland in her infancy would have supposed her born"
+      },
+      {
+        "start": 9.08,
+        "end": 11.6,
+        "text": "to be a heroine."
+      },
+      {
+        "start": 11.6,
+        "end": 18.08,
+        "text": "Her situation in life, the character of her father and mother, her own person and disposition,"
+      },
+      {
+        "start": 18.08,
+        "end": 21.68,
+        "text": "were all equally against her."
+      },
+      {
+        "start": 21.68,
+        "end": 28.04,
+        "text": "Her father was a clergyman, without being neglected or poor, and a very respectable man."
+      },
+      {
+        "start": 28.04,
+        "end": 34.44,
+        "text": "Her mother was a woman of useful plane sense, with a good temper, and, what is more remarkable,"
+      },
+      {
+        "start": 34.44,
+        "end": 37.68,
+        "text": "with a good constitution."
+      },
+      {
+        "start": 37.68,
+        "end": 40.24,
+        "text": "She had three sons before Catherine was born."
+      }
+    ]
+  },
+  {
+    "id": "session_3",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_3.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 5.52,
+        "text": "where there are heads and arms and legs enough for the number, but the Moorlands had little"
+      },
+      {
+        "start": 5.52,
+        "end": 11.6,
+        "text": "other right to the word, for they were in general very plain, and Catherine, for many years of her"
+      },
+      {
+        "start": 11.6,
+        "end": 20.08,
+        "text": "life, as plain as any. She had a thin, awkward figure, dark, blank hair, and strong features,"
+      },
+      {
+        "start": 20.72,
+        "end": 27.04,
+        "text": "so much for her person. And not less unpropicious for heroism seemed her mind."
+      },
+      {
+        "start": 27.04,
+        "end": 34.64,
+        "text": "She was fond of all boys' plays and greatly preferred cricket."
+      }
+    ]
+  },
+  {
+    "id": "session_4",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_4.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 4.88,
+        "text": "not merely to dolls, but to the more heroic enjoyments of infancy,"
+      },
+      {
+        "start": 4.88,
+        "end": 10.24,
+        "text": "nursing a door-mouse, feeding a canary bird or a watering a rose-bush."
+      },
+      {
+        "start": 10.24,
+        "end": 15.84,
+        "text": "Indeed she had no taste for a garden, and if she gathered flowers at all it was chiefly for"
+      },
+      {
+        "start": 15.84,
+        "end": 21.44,
+        "text": "the pleasure of mischief, at least so it was conjectured from her always preferring those"
+      },
+      {
+        "start": 21.44,
+        "end": 29.28,
+        "text": "which she was forbidden to take. Such were her propensities. Her abilities were quite as extraordinary."
+      },
+      {
+        "start": 30.0,
+        "end": 33.92,
+        "text": "She never could learn or understand anything before she was taught,"
+      },
+      {
+        "start": 33.92,
+        "end": 39.12,
+        "text": "and sometimes not even then, for she was often inattentive and occasionally stupid."
+      }
+    ]
+  },
+  {
+    "id": "session_5",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_5.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 6.8,
+        "text": "Her mother was three months in teaching her only to repeat the beggar's petition, and"
+      },
+      {
+        "start": 6.8,
+        "end": 12.0,
+        "text": "after all her next sister Sally could say it better than she did."
+      },
+      {
+        "start": 12.0,
+        "end": 17.64,
+        "text": "Not that Catherine was always stupid, by no means, she learnt the fable of the hair and"
+      },
+      {
+        "start": 17.64,
+        "end": 21.72,
+        "text": "many friends as quickly as any girl in England."
+      },
+      {
+        "start": 21.72,
+        "end": 26.8,
+        "text": "Her mother wished her to learn music, and Catherine was sure she should like it, for she was"
+      },
+      {
+        "start": 26.8,
+        "end": 30.28,
+        "text": "very fond of tinkling the keys of the old for Lauren Spinett."
+      }
+    ]
+  },
+  {
+    "id": "session_6",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_6.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 3.72,
+        "text": "So, at eight years old she began."
+      },
+      {
+        "start": 3.72,
+        "end": 8.78,
+        "text": "She learned to year and could not bear it, and Mrs. Morland, who did not insist on her"
+      },
+      {
+        "start": 8.78,
+        "end": 15.56,
+        "text": "daughters being accomplished in spite of incapacity or distaste, allowed her to leave off."
+      },
+      {
+        "start": 15.56,
+        "end": 17.36,
+        "text": "French by her mother."
+      },
+      {
+        "start": 17.36,
+        "end": 22.44,
+        "text": "Her proficiency in either was not remarkable, and she shirked her lessons in both whenever"
+      },
+      {
+        "start": 22.44,
+        "end": 23.44,
+        "text": "she could."
+      },
+      {
+        "start": 23.44,
+        "end": 26.88,
+        "text": "What a strange, unaccountable character."
+      },
+      {
+        "start": 26.88,
+        "end": 30.08,
+        "text": "Or with all these symptoms of proflogacy at ten years old."
+      }
+    ]
+  },
+  {
+    "id": "session_7",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_7.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 5.96,
+        "text": "Hated confinement and cleanliness, and loved nothing so well in the world as rolling down"
+      },
+      {
+        "start": 5.96,
+        "end": 9.96,
+        "text": "the green slope at the back of the house."
+      },
+      {
+        "start": 9.96,
+        "end": 13.2,
+        "text": "Such was Catherine Morlin at ten."
+      },
+      {
+        "start": 13.2,
+        "end": 16.04,
+        "text": "At fifteen appearances were mending."
+      },
+      {
+        "start": 16.04,
+        "end": 19.88,
+        "text": "She began to curl her hair and long for balls."
+      },
+      {
+        "start": 19.88,
+        "end": 21.68,
+        "text": "Her complexion improved."
+      },
+      {
+        "start": 21.68,
+        "end": 24.92,
+        "text": "Her features were softened by plumpness and color."
+      },
+      {
+        "start": 24.92,
+        "end": 29.96,
+        "text": "Her eyes gained more animation and her figure more consequence."
+      },
+      {
+        "start": 29.96,
+        "end": 35.16,
+        "text": "Her love of dirt gave way to an inclination for finery, and she grew clean as she grew"
+      },
+      {
+        "start": 35.16,
+        "end": 36.76,
+        "text": "smart."
+      },
+      {
+        "start": 36.76,
+        "end": 41.08,
+        "text": "She had now the pleasure of sometimes hearing her father and mother remark on her personal"
+      },
+      {
+        "start": 41.08,
+        "end": 41.76,
+        "text": "improvement."
+      }
+    ]
+  },
+  {
+    "id": "session_8",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_8.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 6.44,
+        "text": "Catherine grows quite a good-looking girl. She is almost pretty today."
+      },
+      {
+        "start": 6.44,
+        "end": 11.72,
+        "text": "Were words which caught her ears now and then, and how welcome were the sounds. To look"
+      },
+      {
+        "start": 11.72,
+        "end": 18.0,
+        "text": "almost pretty, then a beauty from her cradle can ever receive."
+      },
+      {
+        "start": 18.0,
+        "end": 22.84,
+        "text": "Mrs. Marland was a very good woman, and wished to see her children everything they ought"
+      },
+      {
+        "start": 22.84,
+        "end": 29.48,
+        "text": "to be. But her time was so much occupied in lying in and teaching the little ones,"
+      },
+      {
+        "start": 29.48,
+        "end": 34.6,
+        "text": "that her elder daughters were inevitably left to shift for themselves."
+      },
+      {
+        "start": 34.6,
+        "end": 39.76,
+        "text": "And it was not very wonderful that Catherine, who had by nature nothing heroic about her,"
+      },
+      {
+        "start": 39.76,
+        "end": 43.24,
+        "text": "should prefer cricket, baseball, riding on horseback."
+      }
+    ]
+  },
+  {
+    "id": "session_9",
+    "media": {
+      "type": "audio",
+      "src": "/audio/session_9.wav"
+    },
+    "lines": [
+      {
+        "start": 0.0,
+        "end": 6.64,
+        "text": "and running about the country at the age of 14 to books, or at least books of information."
+      },
+      {
+        "start": 6.64,
+        "end": 11.4,
+        "text": "For, provided that nothing like useful knowledge could be gained from them,"
+      },
+      {
+        "start": 11.4,
+        "end": 18.24,
+        "text": "provided they were all story and no reflection, she had never any objection to books at all."
+      },
+      {
+        "start": 18.24,
+        "end": 22.8,
+        "text": "But from 15 to 17 she was in training for a heroine."
+      },
+      {
+        "start": 22.8,
+        "end": 30.0,
+        "text": "She read all such works as heroines must read to supply their memories with those quotations, which are so serviceable."
+      }
+    ]
+  }
 ]

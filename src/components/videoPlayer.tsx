@@ -8,18 +8,27 @@ import "./VideoPlayer.css";
 
 export type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
+/**
+ * ✅ 변경 포인트
+ * - start/end는 MFA 붙이기 전엔 없을 수 있어서 optional로 둠
+ * - (MFA 붙으면 start/end 들어오면 그걸로 싱크)
+ */
 type Line = {
-  start: number;
-  end: number;
+  start?: number;
+  end?: number;
   text: string;
 };
 
+/**
+ * ✅ 변경 포인트
+ * - audio도 lines 구조로 통일
+ * - (기존 호환용으로 text?도 남겨둠: 예전 JSON을 그대로 써도 깨지지 않게)
+ */
 type AudioItem = {
-
-
   id: string;
   media: { type: "audio"; src: string };
-  text: string;
+  lines: Line[];
+  text?: string; // legacy support
 };
 
 type VideoItem = {
@@ -79,6 +88,15 @@ function buildTokenDiff(userRaw: string, correctRaw: string): DiffToken[] {
   return out;
 }
 
+/* ===== helpers ===== */
+
+/** 현재 아이템에 "타임스탬프가 실제로 존재"하는지 판단 */
+function hasTiming(lines: Line[] | undefined): boolean {
+  if (!lines || lines.length === 0) return false;
+  // start/end 둘 중 하나라도 숫자면 "타이밍 있음"으로 판단
+  return lines.some((l) => typeof l.start === "number" && typeof l.end === "number");
+}
+
 export default function VideoPlayer({
   onDone,
   onResult,
@@ -88,7 +106,7 @@ export default function VideoPlayer({
   const mediaRef = useRef<HTMLMediaElement | null>(null);
 
   const [index, setIndex] = useState(0);
-  const item: Item = data[index];
+  const item: Item = (data as any)[index];
 
   const [mode, setMode] = useState<PracticeMode>("LISTEN");
   const [showSubtitle, setShowSubtitle] = useState(true);
@@ -120,9 +138,16 @@ export default function VideoPlayer({
     getTime,
   } = useVideoControl(mediaRef);
 
+  /**
+   * ✅ 변경 포인트
+   * - 이제 audio/video 모두 lines 기반이므로 correctText도 lines를 우선 사용
+   * - 혹시 legacy JSON(text)만 있는 경우를 대비해 fallback 유지
+   */
   const correctText = useMemo(() => {
-    if ("text" in item) return item.text;
-    return item.lines.map((l) => l.text).join(" ");
+    const linesText = item?.lines?.map((l) => l.text).join(" ");
+    if (linesText && linesText.trim().length) return linesText;
+    if ("text" in item && typeof item.text === "string") return item.text;
+    return "";
   }, [item]);
 
   const dictationDiff = useMemo(() => {
@@ -169,42 +194,72 @@ export default function VideoPlayer({
     };
   }, []);
 
-  /* LISTEN: video subtitle sync */
-  /* 시간 업데이트 + 자막 동기화 통합 */
-useEffect(() => {
-  const el = mediaRef.current;
-  if (!el) return;
+  /**
+   * ✅ 변경 포인트 (핵심)
+   * - 기존: LISTEN + video only 동기화
+   * - 변경: LISTEN + (audio 포함) + 타임스탬프 있을 때만 동기화
+   * - timeupdate에서 currentTime도 업데이트(기존 코드 유지)
+   */
+  useEffect(() => {
+    const el = mediaRef.current;
+    if (!el) return;
 
-  const onEnded = () => setIsPlaying(false);
-  
-  const onTimeUpdate = () => {
-    // 1. 시간 업데이트 (모든 모드)
-    setCurrentTime(el.currentTime);
-    
-    // 2. 자막 동기화 (LISTEN + video only)
-    if (mode === "LISTEN" && item.media.type === "video" && "lines" in item) {
+    const onEnded = () => setIsPlaying(false);
+
+    const onTimeUpdate = () => {
+      // 1. 시간 업데이트 (모든 모드)
+      setCurrentTime(el.currentTime);
+
+      // 2. 자막 동기화 (LISTEN + timestamps present)
+      if (mode === "LISTEN" && "lines" in item && hasTiming(item.lines)) {
       const t = el.currentTime;
-      const idx = item.lines.findIndex((l) => t >= l.start && t < l.end);
+
+      const idx = item.lines.findIndex((l) => {
+        if (typeof l.start !== "number" || typeof l.end !== "number") return false;
+        return t >= l.start && t < l.end;
+      });
+
       if (idx !== -1 && idx !== activeLineIndex) {
         setActiveLineIndex(idx);
       }
-    }
-  };
-  
-  const onLoadedMetadata = () => setDuration(el.duration);
+}
 
-  el.addEventListener("ended", onEnded);
-  el.addEventListener("timeupdate", onTimeUpdate);
-  el.addEventListener("loadedmetadata", onLoadedMetadata);
+    };
 
-  return () => {
-    el.removeEventListener("ended", onEnded);
-    el.removeEventListener("timeupdate", onTimeUpdate);
-    el.removeEventListener("loadedmetadata", onLoadedMetadata);
-  };
-}, [mode, item, activeLineIndex]); // 의존성 추가
+    const onLoadedMetadata = () => setDuration(el.duration);
 
-/* 기존의 별도 자막 동기화 useEffect는 삭제 */
+    el.addEventListener("ended", onEnded);
+    el.addEventListener("timeupdate", onTimeUpdate);
+    el.addEventListener("loadedmetadata", onLoadedMetadata);
+
+    return () => {
+      el.removeEventListener("ended", onEnded);
+      el.removeEventListener("timeupdate", onTimeUpdate);
+      el.removeEventListener("loadedmetadata", onLoadedMetadata);
+    };
+  }, [mode, item, activeLineIndex]);
+
+  /**
+   * ✅ 변경 포인트 (MFA 전 임시 동작)
+   * - 타임스탬프가 없으면(= hasTiming false) LISTEN에서 문장을 자동으로 넘김
+   * - 지금은 3초 간격 (원하면 2초/4초로 조절)
+   */
+  useEffect(() => {
+    if (!item?.lines) return;
+    if (mode !== "LISTEN") return;
+    if (hasTiming(item.lines)) return; // 타임스탬프 있으면 이 임시 로직은 끔
+    if (item.lines.length <= 1) return;
+
+    // 재생 중일 때만 넘기고 싶으면: if (!isPlaying) return; 을 넣으면 됨
+    const interval = setInterval(() => {
+      setActiveLineIndex((prev) => {
+        const nextIdx = prev + 1;
+        return nextIdx < item.lines.length ? nextIdx : prev;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [item, mode]);
 
   /* SHADOWING record done */
   const onRecordDone = async ({
@@ -258,7 +313,6 @@ useEffect(() => {
     startLoop(true);
   };
 
-
   useKeyboardControl({
     setA: () => setA(getTime()),
     setB: () => setB(getTime()),
@@ -270,8 +324,7 @@ useEffect(() => {
     if (A != null && B != null) {
       setLoopRange(Math.min(A, B), Math.max(A, B));
     }
-  }, [A, B]);
-
+  }, [A, B, setLoopRange]);
 
   /* Reset on index / mode */
   useEffect(() => {
@@ -291,7 +344,7 @@ useEffect(() => {
     setEvalResult(null);
     setIsPlaying(false);
     setActiveLineIndex(0);
-    setIndex((i) => (i + 1) % data.length);
+    setIndex((i) => (i + 1) % (data as any).length);
     onSessionEnd?.();
   };
 
@@ -303,14 +356,21 @@ useEffect(() => {
     setEvalResult(null);
     setIsPlaying(false);
     setActiveLineIndex(0);
-    setIndex((i) => (i - 1 + data.length) % data.length);
+    setIndex((i) => (i - 1 + (data as any).length) % (data as any).length);
     onSessionEnd?.();
   };
 
   const speedPresets = [0.5, 0.75, 1, 1.25];
 
+  /**
+   * ✅ 변경 포인트
+   * - 기존: audio는 item.text, video는 item.lines[...] 로 표시
+   * - 변경: audio도 lines[...] 로 표시
+   * - legacy(text only)도 fallback 처리
+   */
   const subtitleText =
-    "text" in item ? item.text : item.lines[activeLineIndex]?.text;
+    item?.lines?.[activeLineIndex]?.text ??
+    (("text" in item && typeof item.text === "string" ? item.text : "") as string);
 
   const changeMode = (m: PracticeMode) => {
     setMode(m);
@@ -323,22 +383,13 @@ useEffect(() => {
       {/* Header */}
       <div className="player-header">
         <div className="mode-selector">
-          <button
-            onClick={() => changeMode("LISTEN")}
-            className={mode === "LISTEN" ? "active" : ""}
-          >
+          <button onClick={() => changeMode("LISTEN")} className={mode === "LISTEN" ? "active" : ""}>
             Listen
           </button>
-          <button
-            onClick={() => changeMode("SHADOWING")}
-            className={mode === "SHADOWING" ? "active" : ""}
-          >
+          <button onClick={() => changeMode("SHADOWING")} className={mode === "SHADOWING" ? "active" : ""}>
             Shadowing
           </button>
-          <button
-            onClick={() => changeMode("DICTATION")}
-            className={mode === "DICTATION" ? "active" : ""}
-          >
+          <button onClick={() => changeMode("DICTATION")} className={mode === "DICTATION" ? "active" : ""}>
             Dictation
           </button>
         </div>
@@ -348,7 +399,7 @@ useEffect(() => {
             ←
           </button>
           <span className="nav-counter">
-            {index + 1} / {data.length}
+            {index + 1} / {(data as any).length}
           </span>
           <button className="nav-btn" onClick={next}>
             →
@@ -358,17 +409,9 @@ useEffect(() => {
 
       {/* Media */}
       {item.media.type === "video" ? (
-        <video
-          ref={mediaRef as any}
-          className="media-player"
-          src={item.media.src}
-        />
+        <video ref={mediaRef as any} className="media-player" src={item.media.src} />
       ) : (
-        <audio
-          ref={mediaRef as any}
-          className="media-player"
-          src={item.media.src}
-        />
+        <audio ref={mediaRef as any} className="media-player" src={item.media.src} />
       )}
 
       {/* 플레이어 정보 바 */}
@@ -395,10 +438,7 @@ useEffect(() => {
 
       {/* Subtitle toggle */}
       <div className="subtitle-toggle">
-        <button
-          className="btn-subtitle-toggle"
-          onClick={() => setShowSubtitle((v) => !v)}
-        >
+        <button className="btn-subtitle-toggle" onClick={() => setShowSubtitle((v) => !v)}>
           {showSubtitle ? "Hide subtitle" : "Show subtitle"}
         </button>
       </div>
@@ -410,10 +450,7 @@ useEffect(() => {
       <div className="controls">
         {/* Play */}
         <div className="play-section">
-          <button
-            className={`btn-play ${isPlaying ? "playing" : ""}`}
-            onClick={togglePlay}
-          >
+          <button className={`btn-play ${isPlaying ? "playing" : ""}`} onClick={togglePlay}>
             {isPlaying ? "⏸" : "▶"}
           </button>
         </div>
@@ -439,9 +476,7 @@ useEffect(() => {
           {speedPresets.map((s) => (
             <button
               key={s}
-              className={`speed-chip ${
-                Math.abs(playbackRate - s) < 0.01 ? "active" : ""
-              }`}
+              className={`speed-chip ${Math.abs(playbackRate - s) < 0.01 ? "active" : ""}`}
               onClick={() => setPlaybackRate(s)}
             >
               {s}x
@@ -450,44 +485,35 @@ useEffect(() => {
         </div>
 
         {/* SHADOWING */}
-      {mode === "SHADOWING" && (
-        <div className="record-section">
-          {recordState === "READY" && (
-            <button
-              className="btn-record"
-              onClick={() => start(getTime())}
-            >
-              Start Recording
-            </button>
-          )}
-          {recordState === "RECORDING" && (
-            <button
-              className="btn-record recording"
-              onClick={() => stop(getTime())}
-            >
-              Recording…
-            </button>
-          )}
-          {recordState === "DONE" && (
-            <div className="done-actions">
-              <button className="btn-reset" onClick={reset}>
-                Try Again
+        {mode === "SHADOWING" && (
+          <div className="record-section">
+            {recordState === "READY" && (
+              <button className="btn-record" onClick={() => start(getTime())}>
+                Start Recording
               </button>
-              <button className="btn-next" onClick={next}>
-                Next
+            )}
+            {recordState === "RECORDING" && (
+              <button className="btn-record recording" onClick={() => stop(getTime())}>
+                Recording…
               </button>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+            {recordState === "DONE" && (
+              <div className="done-actions">
+                <button className="btn-reset" onClick={reset}>
+                  Try Again
+                </button>
+                <button className="btn-next" onClick={next}>
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* DICTATION */}
         {mode === "DICTATION" && (
           <div className="dictation-panel">
-            <button
-              className="dictation-toggle"
-              onClick={() => setDictationOpen((v) => !v)}
-            >
+            <button className="dictation-toggle" onClick={() => setDictationOpen((v) => !v)}>
               {dictationOpen ? "Hide dictation" : "Start dictation"}
             </button>
 
@@ -501,10 +527,7 @@ useEffect(() => {
                       onChange={(e) => setDictationText(e.target.value)}
                       placeholder="Type exactly what you heard…"
                     />
-                    <button
-                      className="btn-record"
-                      onClick={() => setDictationSubmitted(true)}
-                    >
+                    <button className="btn-record" onClick={() => setDictationSubmitted(true)}>
                       Submit
                     </button>
                   </>
