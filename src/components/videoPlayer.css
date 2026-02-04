@@ -114,10 +114,11 @@
    Media - 독특한 형태
    ============================================ */
 
-.media-player {
+audio.media-player {
   width: 100%;
   background: #000000;
-  min-height: 380px;
+  min-height: auto;
+  height: 56px;
   border-radius: 20px;
   margin-bottom: 18px;
   box-shadow: 
@@ -136,6 +137,8 @@
   background: radial-gradient(ellipse, rgba(0, 0, 0, 0.08), transparent);
   filter: blur(4px);
 }
+
+
 
 /* Player Info - 플로팅 카드 */
 .player-info {
@@ -211,6 +214,8 @@
    Subtitle - 부드러운 형태
    ============================================ */
 
+
+
 .subtitle-toggle {
   display: flex;
   justify-content: flex-end;
@@ -221,7 +226,7 @@
   padding: 7px 14px;
   border: none;
   background: transparent;
-  color: #9a9a9a;
+  color: #6a6a6a;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -234,28 +239,75 @@
   color: #5a5a5a;
 }
 
-.subtitle {
-  padding: 38px 44px;
-  text-align: center;
-  font-size: 24px;
-  line-height: 1.5;
-  color: #2a2a2a;
-  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
-  border-radius: 22px;
-  margin-bottom: 36px;
-  font-family: "Georgia", serif;
-  min-height: 96px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #f5f5f5;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+
+.media-wrapper {
+  position: relative;
 }
 
-.video-player.dictation-mode .subtitle {
-  background: linear-gradient(135deg, #fffef5 0%, #fffdf0 100%);
-  border: 1px dashed #e8d88f;
+.subtitle {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  max-width: 92%;
+  text-align: center;
+
+  font-family: "Noto Sans KR", Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+
+  color: #ffffff;
+  padding: 6px 12px;
+
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.6);
+
+  pointer-events: none;
+  word-break: keep-all;
 }
+
+.audio-subtitle {
+  margin: 16px auto 8px;
+  max-width: 86%;
+  padding: 12px 16px;
+
+  font-family: "Noto Sans KR", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: center;
+
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+
+  border-radius: 14px;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .subtitle {
+    font-size: 18px;
+    padding: 6px 10px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .subtitle {
+    font-size: 16px;
+    padding: 4px 8px;
+    bottom: 14px;
+  }
+}
+
+
+
+
 
 /* ============================================
    Controls - 유기적 배치
@@ -567,6 +619,37 @@
 /* ============================================
    Evaluation - 유동적 형태
    ============================================ */
+
+/* ============================================
+   Similarity / AI Feedback
+   ============================================ */
+
+.similarity-panel {
+  margin-top: 24px;
+  padding: 22px 26px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.similarity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.similarity-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.similarity-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
 
 .eval-result {
   margin-top: 24px;

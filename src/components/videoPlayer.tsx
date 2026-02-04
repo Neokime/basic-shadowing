@@ -9,7 +9,6 @@ import "./VideoPlayer.css";
 export type PracticeMode = "LISTEN" | "SHADOWING" | "DICTATION";
 
 /**
- * ✅ 변경 포인트
  * - start/end는 MFA 붙이기 전엔 없을 수 있어서 optional로 둠
  * - (MFA 붙으면 start/end 들어오면 그걸로 싱크)
  */
@@ -20,7 +19,6 @@ type Line = {
 };
 
 /**
- * ✅ 변경 포인트
  * - audio도 lines 구조로 통일
  * - (기존 호환용으로 text?도 남겨둠: 예전 JSON을 그대로 써도 깨지지 않게)
  */
@@ -93,7 +91,6 @@ function buildTokenDiff(userRaw: string, correctRaw: string): DiffToken[] {
 /** 현재 아이템에 "타임스탬프가 실제로 존재"하는지 판단 */
 function hasTiming(lines: Line[] | undefined): boolean {
   if (!lines || lines.length === 0) return false;
-  // start/end 둘 중 하나라도 숫자면 "타이밍 있음"으로 판단
   return lines.some((l) => typeof l.start === "number" && typeof l.end === "number");
 }
 
@@ -138,11 +135,6 @@ export default function VideoPlayer({
     getTime,
   } = useVideoControl(mediaRef);
 
-  /**
-   * ✅ 변경 포인트
-   * - 이제 audio/video 모두 lines 기반이므로 correctText도 lines를 우선 사용
-   * - 혹시 legacy JSON(text)만 있는 경우를 대비해 fallback 유지
-   */
   const correctText = useMemo(() => {
     const linesText = item?.lines?.map((l) => l.text).join(" ");
     if (linesText && linesText.trim().length) return linesText;
@@ -155,7 +147,6 @@ export default function VideoPlayer({
     return buildTokenDiff(dictationText, correctText);
   }, [dictationSubmitted, dictationText, correctText]);
 
-  /* 시간 포맷 */
   const formatTime = (seconds: number): string => {
     if (!isFinite(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -176,42 +167,59 @@ export default function VideoPlayer({
   };
 
   useEffect(() => {
-    const el = mediaRef.current;
-    if (!el) return;
+  const el = mediaRef.current;
+  if (!el) {
+    console.log("mediaRef 없음");
+    return;
+  }
 
-    const onEnded = () => setIsPlaying(false);
-    const onTimeUpdate = () => setCurrentTime(el.currentTime);
-    const onLoadedMetadata = () => setDuration(el.duration);
+  console.log(
+    "[MEDIA DEBUG]",
+    "readyState:", el.readyState,
+    "duration:", el.duration,
+    "currentTime:", el.currentTime,
+    "src:", el.currentSrc
+  );
 
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("timeupdate", onTimeUpdate);
-    el.addEventListener("loadedmetadata", onLoadedMetadata);
+  const onEnded = () => setIsPlaying(false);
+  const onTimeUpdate = () => setCurrentTime(el.currentTime);
+  const onLoadedMetadata = () => setDuration(el.duration);
 
-    return () => {
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("timeupdate", onTimeUpdate);
-      el.removeEventListener("loadedmetadata", onLoadedMetadata);
-    };
-  }, []);
+  el.addEventListener("ended", onEnded);
+  el.addEventListener("timeupdate", onTimeUpdate);
+  el.addEventListener("loadedmetadata", onLoadedMetadata);
 
-  /**
-   * ✅ 변경 포인트 (핵심)
-   * - 기존: LISTEN + video only 동기화
-   * - 변경: LISTEN + (audio 포함) + 타임스탬프 있을 때만 동기화
-   * - timeupdate에서 currentTime도 업데이트(기존 코드 유지)
-   */
+  return () => {
+    el.removeEventListener("ended", onEnded);
+    el.removeEventListener("timeupdate", onTimeUpdate);
+    el.removeEventListener("loadedmetadata", onLoadedMetadata);
+  };
+}, [item.id]);
+
+
   useEffect(() => {
-    const el = mediaRef.current;
-    if (!el) return;
+  const el = mediaRef.current;
+  if (!el) {
+    console.log("mediaRef 없음");
+    return;
+  }
 
-    const onEnded = () => setIsPlaying(false);
+  console.log(
+    "[MEDIA DEBUG]",
+    "readyState:", el.readyState,
+    "duration:", el.duration,
+    "currentTime:", el.currentTime,
+    "src:", el.currentSrc
+  );
 
-    const onTimeUpdate = () => {
-      // 1. 시간 업데이트 (모든 모드)
-      setCurrentTime(el.currentTime);
+   el.load();
 
-      // 2. 자막 동기화 (LISTEN + timestamps present)
-      if (mode === "LISTEN" && "lines" in item && hasTiming(item.lines)) {
+  const onEnded = () => setIsPlaying(false);
+
+  const onTimeUpdate = () => {
+    setCurrentTime(el.currentTime);
+
+    if (mode === "LISTEN" && hasTiming(item.lines)) {
       const t = el.currentTime;
 
       const idx = item.lines.findIndex((l) => {
@@ -219,38 +227,36 @@ export default function VideoPlayer({
         return t >= l.start && t < l.end;
       });
 
-      if (idx !== -1 && idx !== activeLineIndex) {
+      if (idx !== -1) {
         setActiveLineIndex(idx);
       }
-}
+    }
+  };
 
-    };
+  const onLoadedMetadata = () => {
+    if (isFinite(el.duration)) {
+      setDuration(el.duration);
+    }
+  };
 
-    const onLoadedMetadata = () => setDuration(el.duration);
+  el.addEventListener("ended", onEnded);
+  el.addEventListener("timeupdate", onTimeUpdate);
+  el.addEventListener("loadedmetadata", onLoadedMetadata);
 
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("timeupdate", onTimeUpdate);
-    el.addEventListener("loadedmetadata", onLoadedMetadata);
+  return () => {
+    el.removeEventListener("ended", onEnded);
+    el.removeEventListener("timeupdate", onTimeUpdate);
+    el.removeEventListener("loadedmetadata", onLoadedMetadata);
+  };
+}, [item, mode]);
 
-    return () => {
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("timeupdate", onTimeUpdate);
-      el.removeEventListener("loadedmetadata", onLoadedMetadata);
-    };
-  }, [mode, item, activeLineIndex]);
 
-  /**
-   * ✅ 변경 포인트 (MFA 전 임시 동작)
-   * - 타임스탬프가 없으면(= hasTiming false) LISTEN에서 문장을 자동으로 넘김
-   * - 지금은 3초 간격 (원하면 2초/4초로 조절)
-   */
   useEffect(() => {
     if (!item?.lines) return;
     if (mode !== "LISTEN") return;
-    if (hasTiming(item.lines)) return; // 타임스탬프 있으면 이 임시 로직은 끔
+    if (hasTiming(item.lines)) return;
     if (item.lines.length <= 1) return;
 
-    // 재생 중일 때만 넘기고 싶으면: if (!isPlaying) return; 을 넣으면 됨
     const interval = setInterval(() => {
       setActiveLineIndex((prev) => {
         const nextIdx = prev + 1;
@@ -306,10 +312,10 @@ export default function VideoPlayer({
   const applyLoop = () => {
     if (A == null || B == null) return;
 
-    const start = Math.min(A, B);
-    const end = Math.max(A, B);
+    const startT = Math.min(A, B);
+    const endT = Math.max(A, B);
 
-    setLoopRange(start, end);
+    setLoopRange(startT, endT);
     startLoop(true);
   };
 
@@ -362,12 +368,6 @@ export default function VideoPlayer({
 
   const speedPresets = [0.5, 0.75, 1, 1.25];
 
-  /**
-   * ✅ 변경 포인트
-   * - 기존: audio는 item.text, video는 item.lines[...] 로 표시
-   * - 변경: audio도 lines[...] 로 표시
-   * - legacy(text only)도 fallback 처리
-   */
   const subtitleText =
     item?.lines?.[activeLineIndex]?.text ??
     (("text" in item && typeof item.text === "string" ? item.text : "") as string);
@@ -395,24 +395,11 @@ export default function VideoPlayer({
         </div>
 
         <div className="sentence-nav">
-          <button className="nav-btn" onClick={prev}>
-            ←
-          </button>
-          <span className="nav-counter">
-            {index + 1} / {(data as any).length}
-          </span>
-          <button className="nav-btn" onClick={next}>
-            →
-          </button>
+          <button className="nav-btn" onClick={prev}>←</button>
+          <span className="nav-counter">{index + 1} / {(data as any).length}</span>
+          <button className="nav-btn" onClick={next}>→</button>
         </div>
       </div>
-
-      {/* Media */}
-      {item.media.type === "video" ? (
-        <video ref={mediaRef as any} className="media-player" src={item.media.src} />
-      ) : (
-        <audio ref={mediaRef as any} className="media-player" src={item.media.src} />
-      )}
 
       {/* 플레이어 정보 바 */}
       <div className="player-info">
@@ -421,6 +408,23 @@ export default function VideoPlayer({
           <span className="time-separator">/</span>
           <span className="total-time">{formatTime(duration)}</span>
         </div>
+
+        {/* Seek Bar */}
+      <div className="seek-bar">
+        <input
+          type="range"
+          min={0}
+          max={duration}
+          step={0.01}
+          value={currentTime}
+          onChange={(e) => {
+            if (!mediaRef.current) return;
+            const t = Number(e.target.value);
+            mediaRef.current.currentTime = t;
+          }}
+        />
+      </div>
+
 
         {(A !== null || B !== null) && (
           <div className="loop-info">
@@ -436,15 +440,83 @@ export default function VideoPlayer({
         </div>
       </div>
 
-      {/* Subtitle toggle */}
-      <div className="subtitle-toggle">
-        <button className="btn-subtitle-toggle" onClick={() => setShowSubtitle((v) => !v)}>
-          {showSubtitle ? "Hide subtitle" : "Show subtitle"}
-        </button>
-      </div>
+   
+   {/* Media */}
+  <div className="media-wrapper">
+    {item.media.type === "video" ? (
+      <video
+        key={item.id}                
+        ref={mediaRef as any}
+        className="media-player"
+        src={item.media.src}
+      />
+    ) : (
+      <audio
+        key={item.id}              
+        ref={mediaRef as any}
+        className="media-player"
+        src={item.media.src}
+      />
+    )}
+    </div>
 
-      {/* Subtitle */}
-      {showSubtitle && <div className="subtitle">{subtitleText}</div>}
+    {/* audio: 중앙 카드형 자막 */}
+    {item.media.type === "audio" && showSubtitle && mode !== "DICTATION" && (
+      <div className="audio-subtitle audio-subtitle--center">
+        {subtitleText}
+      </div>
+    )}
+
+
+    {/* Subtitle toggle */}
+    <div className="subtitle-toggle">
+      <button
+        className="btn-subtitle-toggle"
+        onClick={() => setShowSubtitle((v) => !v)}
+      >
+        {showSubtitle ? "Hide subtitle" : "Show subtitle"}
+      </button>
+    </div>
+
+    {/* Similarity Result (Shadowing only) */}
+    {mode === "SHADOWING" && evalResult && (
+      <div className="similarity-panel">
+        <div className="similarity-header">
+          Similarity
+        </div>
+
+        <div className="similarity-body">
+          <div className="similarity-row">
+            <span className="label">Overall similarity</span>
+            <span className="value">{evalResult.score.toFixed(0)}%</span>
+          </div>
+
+          {evalResult.pronunciationLevel && (
+            <div className="similarity-row">
+              <span className="label">Pronunciation</span>
+              <span className="value">{evalResult.pronunciationLevel}</span>
+            </div>
+          )}
+
+          {evalResult.intonationLevel && (
+            <div className="similarity-row">
+              <span className="label">Intonation</span>
+              <span className="value">{evalResult.intonationLevel}</span>
+            </div>
+          )}
+
+          {evalResult.weakSegments?.length > 0 && (
+            <div className="similarity-hint">
+              Focus segment:{" "}
+              {evalResult.weakSegments[0].start.toFixed(1)}s –{" "}
+              {evalResult.weakSegments[0].end.toFixed(1)}s
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+
 
       {/* Controls */}
       <div className="controls">
@@ -457,18 +529,10 @@ export default function VideoPlayer({
 
         {/* Loop */}
         <div className="loop-section">
-          <button className="btn-link" onClick={() => setA(getTime())}>
-            Set A
-          </button>
-          <button className="btn-link" onClick={() => setB(getTime())}>
-            Set B
-          </button>
-          <button className="btn-loop" onClick={applyLoop}>
-            A–B Loop
-          </button>
-          <button className="btn-link" onClick={stopLoop}>
-            Loop Stop
-          </button>
+          <button className="btn-link" onClick={() => setA(getTime())}>Set A</button>
+          <button className="btn-link" onClick={() => setB(getTime())}>Set B</button>
+          <button className="btn-loop" onClick={applyLoop}>A–B Loop</button>
+          <button className="btn-link" onClick={stopLoop}>Loop Stop</button>
         </div>
 
         {/* Speed */}
@@ -499,12 +563,8 @@ export default function VideoPlayer({
             )}
             {recordState === "DONE" && (
               <div className="done-actions">
-                <button className="btn-reset" onClick={reset}>
-                  Try Again
-                </button>
-                <button className="btn-next" onClick={next}>
-                  Next
-                </button>
+                <button className="btn-reset" onClick={reset}>Try Again</button>
+                <button className="btn-next" onClick={next}>Next</button>
               </div>
             )}
           </div>
@@ -533,27 +593,20 @@ export default function VideoPlayer({
                   </>
                 ) : (
                   <div className="dictation-result">
-                    {/* 통계 */}
                     <div className="dictation-stats">
                       <div className="stat-item">
                         <span className="stat-dot correct"></span>
-                        <span className="stat-count">
-                          {dictationDiff.filter((t) => t.state === "correct").length}
-                        </span>
+                        <span className="stat-count">{dictationDiff.filter((t) => t.state === "correct").length}</span>
                         <span className="stat-label">correct</span>
                       </div>
                       <div className="stat-item">
                         <span className="stat-dot wrong"></span>
-                        <span className="stat-count">
-                          {dictationDiff.filter((t) => t.state === "wrong").length}
-                        </span>
+                        <span className="stat-count">{dictationDiff.filter((t) => t.state === "wrong").length}</span>
                         <span className="stat-label">wrong</span>
                       </div>
                       <div className="stat-item">
                         <span className="stat-dot extra"></span>
-                        <span className="stat-count">
-                          {dictationDiff.filter((t) => t.state === "extra").length}
-                        </span>
+                        <span className="stat-count">{dictationDiff.filter((t) => t.state === "extra").length}</span>
                         <span className="stat-label">extra</span>
                       </div>
                     </div>
@@ -565,9 +618,7 @@ export default function VideoPlayer({
                           <span className="tok empty">—</span>
                         ) : (
                           dictationDiff.map((t, i) => (
-                            <span key={i} className={`tok ${t.state}`}>
-                              {t.text}
-                            </span>
+                            <span key={i} className={`tok ${t.state}`}>{t.text}</span>
                           ))
                         )}
                       </div>
@@ -588,9 +639,7 @@ export default function VideoPlayer({
                       >
                         Try Again
                       </button>
-                      <button className="btn-next" onClick={next}>
-                        Next
-                      </button>
+                      <button className="btn-next" onClick={next}>Next</button>
                     </div>
                   </div>
                 )}
