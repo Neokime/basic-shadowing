@@ -27,7 +27,7 @@ function App() {
   );
   const [activeMode, setActiveMode] = useState<PracticeMode>("LISTEN");
 
-  const fetchHistory = () => {npm
+  const fetchHistory = () => {
     fetch("http://localhost:8088/practice/history")
       .then((res) => res.json())
       .then(setHistory)
