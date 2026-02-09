@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useVideoControl } from "../hooks/useVideoControl";
 import { useKeyboardControl } from "../hooks/useKeyboardControl";
 import { useRecordSegment } from "../hooks/useRecordSegment";
-import { mockEvaluate } from "../engine/mockEvaluate";
+
 import data from "../data/index.json";
 import "./VideoPlayer.css";
 
@@ -219,7 +219,7 @@ export default function VideoPlayer({
   const onTimeUpdate = () => {
     setCurrentTime(el.currentTime);
 
-    if (mode === "LISTEN" && hasTiming(item.lines)) {
+    if (hasTiming(item.lines)) {
       const t = el.currentTime;
 
       const idx = item.lines.findIndex((l) => {
@@ -281,17 +281,17 @@ export default function VideoPlayer({
     formData.append("itemId", item.id);
     formData.append("audio", audioBlob, "recording.webm");
 
-    await fetch("http://localhost:8087/practice/record", {
-      method: "POST",
-      body: formData,
-    });
+   const res = await fetch("http://localhost:8000/evaluate", {
+  method: "POST",
+  body: formData,
+});
 
-    const result = mockEvaluate({
-      contentId: item.id,
-      startTime,
-      endTime,
-      playbackRate,
-    });
+const result = await res.json();
+setEvalResult({
+  ...result,
+  score: Math.round(result.score * 100), // 0~1 → %
+});
+
 
     setEvalResult(result);
 
